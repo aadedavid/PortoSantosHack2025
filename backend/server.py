@@ -12,6 +12,8 @@ from datetime import datetime, timedelta
 import httpx
 import asyncio
 from enum import Enum
+import re
+from bs4 import BeautifulSoup
 
 
 ROOT_DIR = Path(__file__).parent
