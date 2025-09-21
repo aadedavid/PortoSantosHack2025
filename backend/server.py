@@ -891,6 +891,72 @@ async def get_aps_diope_tables():
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@api_router.get("/marine-traffic/links/{vessel_id}")
+async def get_marine_traffic_links(vessel_id: str):
+    """Generate MarineTraffic deep-links for a specific vessel"""
+    try:
+        # Get vessel data
+        vessel = await db.vessel_schedules.find_one({"identificador_navio": vessel_id})
+        if not vessel:
+            raise HTTPException(status_code=404, detail="Vessel not found")
+        
+        vessel_obj = VesselSchedule(**vessel)
+        
+        # Build MarineTraffic links
+        links = MarineTrafficLinkBuilder.build_links(
+            imo=vessel_obj.imo,
+            mmsi=vessel_obj.mmsi,
+            shipid=vessel_obj.shipid,
+            vessel_name=vessel_obj.identificador_navio,
+            lat=vessel_obj.latitude,
+            lon=vessel_obj.longitude,
+            language="pt"  # Portuguese for Brazilian users
+        )
+        
+        return {
+            "vessel_id": vessel_id,
+            "vessel_name": vessel_obj.identificador_navio,
+            "marine_traffic_links": {
+                "details": links.url_details,
+                "map_vessel": links.url_map_vessel,
+                "map_coords": links.url_map_coords,
+                "embed": links.url_embed
+            },
+            "has_tracking_data": bool(vessel_obj.imo or vessel_obj.mmsi or vessel_obj.shipid)
+        }
+    
+    except HTTPException:
+        raise
+    except Exception as e:
+        logging.error(f"Error generating MarineTraffic links: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@api_router.get("/marine-traffic/port-santos")
+async def get_santos_port_links():
+    """Get MarineTraffic links for Santos Port overview"""
+    try:
+        port_links = MarineTrafficLinkBuilder.get_santos_port_links(language="pt")
+        
+        return {
+            "port_name": "Porto de Santos",
+            "port_code": "BRSSZ", 
+            "port_id": 189,
+            "marine_traffic_links": {
+                "port_details": port_links.url_port,
+                "port_map": port_links.url_map_coords
+            },
+            "coordinates": {
+                "latitude": -23.9534,
+                "longitude": -46.3334
+            }
+        }
+    
+    except Exception as e:
+        logging.error(f"Error generating Santos port links: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @api_router.get("/marine-traffic/santos")
 async def get_marine_traffic_santos():
     """Get vessels heading to Santos Port from AIS data"""
