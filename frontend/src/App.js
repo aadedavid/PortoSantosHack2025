@@ -85,6 +85,12 @@ const Dashboard = () => {
       setConflicts(conflictsRes.data);
       setKpis(kpisRes.data);
       setMarineTraffic(marineRes.data.vessels_approaching || []);
+      
+      // Set current operations if available
+      if (currentOpsRes) {
+        setCurrentOps(currentOpsRes.data.current_operations || {});
+      }
+      
       setLastSync(new Date().toLocaleString('pt-BR'));
     } catch (error) {
       console.error('Erro ao carregar dados do dashboard:', error);
