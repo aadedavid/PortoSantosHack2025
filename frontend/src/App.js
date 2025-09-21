@@ -23,10 +23,12 @@ const Dashboard = () => {
   const [conflicts, setConflicts] = useState([]);
   const [kpis, setKpis] = useState({});
   const [marineTraffic, setMarineTraffic] = useState([]);
+  const [currentOps, setCurrentOps] = useState({});
   const [loading, setLoading] = useState(true);
   const [lastSync, setLastSync] = useState(null);
   const [dateFilter, setDateFilter] = useState({ start: '', end: '' });
   const [timelineInfo, setTimelineInfo] = useState({});
+  const [isNowView, setIsNowView] = useState(false);
 
   useEffect(() => {
     loadDashboardData();
