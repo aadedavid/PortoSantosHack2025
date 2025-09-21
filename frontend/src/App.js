@@ -307,6 +307,86 @@ const Dashboard = () => {
           </div>
         )}
 
+        {/* Current Operations - Real Time View */}
+        {isNowView && Object.keys(currentOps).length > 0 && (
+          <div className="bg-indigo-50 border border-indigo-200 rounded-lg p-4 mb-6">
+            <div className="flex">
+              <svg className="w-5 h-5 text-indigo-400" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
+              </svg>
+              <div className="ml-3 flex-1">
+                <h3 className="text-sm font-medium text-indigo-800">Operações em Tempo Real - Últimas 24h</h3>
+                <div className="mt-3 grid grid-cols-1 md:grid-cols-4 gap-4">
+                  
+                  {/* Recently Arrived */}
+                  {currentOps.recently_arrived && currentOps.recently_arrived.length > 0 && (
+                    <div className="bg-white rounded-lg p-3 shadow-sm">
+                      <h4 className="font-medium text-green-800 mb-2">
+                        Recém Chegados ({currentOps.recently_arrived.length})
+                      </h4>
+                      {currentOps.recently_arrived.slice(0, 3).map((vessel, idx) => (
+                        <div key={idx} className="text-xs mb-2">
+                          <div className="font-medium">{vessel.vessel}</div>
+                          <div className="text-gray-600">{vessel.terminal}</div>
+                          <div className="text-green-600">Há {vessel.hours_ago}h</div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Currently Berthed */}
+                  {currentOps.currently_berthed && currentOps.currently_berthed.length > 0 && (
+                    <div className="bg-white rounded-lg p-3 shadow-sm">
+                      <h4 className="font-medium text-blue-800 mb-2">
+                        Atracados Agora ({currentOps.currently_berthed.length})
+                      </h4>
+                      {currentOps.currently_berthed.slice(0, 3).map((vessel, idx) => (
+                        <div key={idx} className="text-xs mb-2">
+                          <div className="font-medium">{vessel.vessel}</div>
+                          <div className="text-gray-600">{vessel.terminal}</div>
+                          <div className="text-blue-600">{vessel.hours_berthed}h atracado</div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Arriving Soon */}
+                  {currentOps.arriving_soon && currentOps.arriving_soon.length > 0 && (
+                    <div className="bg-white rounded-lg p-3 shadow-sm">
+                      <h4 className="font-medium text-yellow-800 mb-2">
+                        Chegando Hoje ({currentOps.arriving_soon.length})
+                      </h4>
+                      {currentOps.arriving_soon.slice(0, 3).map((vessel, idx) => (
+                        <div key={idx} className="text-xs mb-2">
+                          <div className="font-medium">{vessel.vessel}</div>
+                          <div className="text-gray-600">{vessel.terminal}</div>
+                          <div className="text-yellow-600">Em {vessel.hours_until}h</div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Departing Soon */}
+                  {currentOps.departing_soon && currentOps.departing_soon.length > 0 && (
+                    <div className="bg-white rounded-lg p-3 shadow-sm">
+                      <h4 className="font-medium text-purple-800 mb-2">
+                        Saindo Hoje ({currentOps.departing_soon.length})
+                      </h4>
+                      {currentOps.departing_soon.slice(0, 3).map((vessel, idx) => (
+                        <div key={idx} className="text-xs mb-2">
+                          <div className="font-medium">{vessel.vessel}</div>
+                          <div className="text-gray-600">{vessel.terminal}</div>
+                          <div className="text-purple-600">Em {vessel.hours_until}h</div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Marine Traffic Alert */}
         {marineTraffic.length > 0 && (
           <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
