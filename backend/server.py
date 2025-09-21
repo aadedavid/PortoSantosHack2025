@@ -89,6 +89,13 @@ class VesselSchedule(BaseModel):
     observacoes: Optional[str] = None
     intercorrencias: Optional[str] = None
     
+    # MarineTraffic integration
+    imo: Optional[str] = None
+    mmsi: Optional[str] = None
+    shipid: Optional[str] = None
+    latitude: Optional[float] = None
+    longitude: Optional[float] = None
+    
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
 
