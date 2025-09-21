@@ -616,6 +616,15 @@ const Dashboard = () => {
                     <td className="px-6 py-4 text-sm text-gray-500">
                       {vessel.intercorrencias || 'Nenhuma'}
                     </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <button
+                        onClick={() => openMarineTrafficLink(vessel.identificador_navio)}
+                        className="text-xs bg-blue-100 hover:bg-blue-200 text-blue-800 px-3 py-1 rounded transition-colors"
+                        title="Ver rastreamento AIS no MarineTraffic"
+                      >
+                        🌊 Ver AIS
+                      </button>
+                    </td>
                   </tr>
                 ))}
               </tbody>
