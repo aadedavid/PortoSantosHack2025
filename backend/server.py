@@ -268,6 +268,128 @@ class ExternalAPIService:
         
         return vessels_data
 
+    async def scrape_aps_diope_tables(self) -> Dict[str, List[Dict[str, Any]]]:
+        """Scrape APS DIOPE public tables (Fundeados/Esperados/Atracados/Programadas)"""
+        diope_data = {
+            "esperados": [],
+            "fundeados": [],
+            "atracados": [],
+            "programadas": []
+        }
+        
+        try:
+            # For MVP, we'll simulate APS DIOPE data structure
+            # In production, this would scrape actual APS public pages
+            
+            # Simulate "Navios Esperados" - Expected vessels
+            esperados_sample = [
+                {
+                    "navio": "CMA CGM MARSEILLE",
+                    "terminal": "Brasil Terminal Portuário",
+                    "berco": "BTP01",
+                    "etb_estimado": (datetime.utcnow() + timedelta(hours=6)).isoformat(),
+                    "operacao": "descarga",
+                    "agencia": "CMA CGM do Brasil",
+                    "origem": "Buenos Aires"
+                },
+                {
+                    "navio": "EVER LEGEND", 
+                    "terminal": "Tecon Santos",
+                    "berco": "TS15",
+                    "etb_estimado": (datetime.utcnow() + timedelta(hours=12)).isoformat(),
+                    "operacao": "carga",
+                    "agencia": "Evergreen Marine",
+                    "origem": "Rio de Janeiro"
+                },
+                {
+                    "navio": "APL CHANGI",
+                    "terminal": "Ecoporto Santos", 
+                    "berco": "EC03",
+                    "etb_estimado": (datetime.utcnow() + timedelta(hours=18)).isoformat(),
+                    "operacao": "transbordo",
+                    "agencia": "APL Brasil",
+                    "origem": "Paranaguá"
+                }
+            ]
+            
+            # Simulate "Navios Fundeados" - Anchored vessels (recent arrivals)
+            fundeados_sample = [
+                {
+                    "navio": "MSC FIAMMETTA",
+                    "ata_fundeio": (datetime.utcnow() - timedelta(hours=2)).isoformat(),
+                    "aguardando": "berço livre",
+                    "terminal_destino": "Brasil Terminal Portuário",
+                    "agencia": "MSC Brasil",
+                    "posicao_fundeio": "F-03"
+                },
+                {
+                    "navio": "CCNI ARAUCO",
+                    "ata_fundeio": (datetime.utcnow() - timedelta(hours=8)).isoformat(),
+                    "aguardando": "documentação",
+                    "terminal_destino": "Tecon Santos", 
+                    "agencia": "CCNI Brasil",
+                    "posicao_fundeio": "F-07"
+                }
+            ]
+            
+            # Simulate "Navios Atracados" - Currently berthed
+            atracados_sample = [
+                {
+                    "navio": "HAPAG LLOYD SANTOS",
+                    "terminal": "Tecon Santos",
+                    "berco": "TS12",
+                    "atb_real": (datetime.utcnow() - timedelta(hours=14)).isoformat(),
+                    "etd_estimado": (datetime.utcnow() + timedelta(hours=10)).isoformat(),
+                    "operacao": "descarga/carga",
+                    "progresso": "78%",
+                    "agencia": "Hapag-Lloyd Brasil"
+                },
+                {
+                    "navio": "ZIM KINGSTON",
+                    "terminal": "Brasil Terminal Portuário", 
+                    "berco": "BTP02",
+                    "atb_real": (datetime.utcnow() - timedelta(hours=22)).isoformat(),
+                    "etd_estimado": (datetime.utcnow() + timedelta(hours=4)).isoformat(),
+                    "operacao": "carga",
+                    "progresso": "92%",
+                    "agencia": "ZIM Brasil"
+                }
+            ]
+            
+            # Simulate "Navios Programadas" - Scheduled vessels
+            programadas_sample = [
+                {
+                    "navio": "ONE COMMITMENT",
+                    "terminal": "Ecoporto Santos",
+                    "berco": "EC01", 
+                    "etb_programado": (datetime.utcnow() + timedelta(days=1, hours=8)).isoformat(),
+                    "etd_programado": (datetime.utcnow() + timedelta(days=2, hours=2)).isoformat(),
+                    "operacao": "descarga",
+                    "agencia": "Ocean Network Express",
+                    "status_programa": "confirmado"
+                },
+                {
+                    "navio": "MAERSK LEON",
+                    "terminal": "Brasil Terminal Portuário",
+                    "berco": "BTP03",
+                    "etb_programado": (datetime.utcnow() + timedelta(days=1, hours=16)).isoformat(), 
+                    "etd_programado": (datetime.utcnow() + timedelta(days=2, hours=12)).isoformat(),
+                    "operacao": "carga/descarga",
+                    "agencia": "Maersk Brasil",
+                    "status_programa": "tentativo"
+                }
+            ]
+            
+            diope_data["esperados"] = esperados_sample
+            diope_data["fundeados"] = fundeados_sample  
+            diope_data["atracados"] = atracados_sample
+            diope_data["programadas"] = programadas_sample
+            
+        except Exception as e:
+            logging.error(f"Error scraping APS DIOPE data: {e}")
+        
+        return diope_data
+
     async def close(self):
         await self.client.aclose()
 
