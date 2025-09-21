@@ -14,6 +14,7 @@ import asyncio
 from enum import Enum
 import re
 from bs4 import BeautifulSoup
+from marine_traffic_links import MarineTrafficLinkBuilder, create_vessel_links
 
 
 ROOT_DIR = Path(__file__).parent
