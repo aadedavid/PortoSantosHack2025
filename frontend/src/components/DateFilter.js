@@ -16,6 +16,11 @@ const DateFilter = ({ onDateChange, currentStartDate, currentEndDate }) => {
 
   const presetRanges = [
     {
+      label: 'Agora (24h)',
+      start: new Date().toISOString().split('T')[0],
+      end: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+    },
+    {
       label: 'Últimos 7 dias',
       start: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
       end: new Date().toISOString().split('T')[0]
