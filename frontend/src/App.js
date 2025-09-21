@@ -492,6 +492,22 @@ const Dashboard = () => {
                             {schedule.observations && (
                               <div className="mt-1 text-gray-500">{schedule.observations}</div>
                             )}
+                            <div className="mt-2 flex space-x-2">
+                              <button
+                                onClick={() => openMarineTrafficLink(schedule.vessel_id)}
+                                className="text-xs bg-blue-100 hover:bg-blue-200 text-blue-800 px-2 py-1 rounded transition-colors"
+                                title="Ver no MarineTraffic"
+                              >
+                                🌊 AIS
+                              </button>
+                              <button
+                                onClick={() => openPortMapLink()}
+                                className="text-xs bg-green-100 hover:bg-green-200 text-green-800 px-2 py-1 rounded transition-colors"
+                                title="Ver mapa do porto"
+                              >
+                                🗺️ Mapa
+                              </button>
+                            </div>
                           </div>
                         </div>
                       </div>
