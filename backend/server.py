@@ -312,11 +312,12 @@ class KPICalculationService:
     def calculate_kpis(schedules: List[VesselSchedule], start_date: datetime, end_date: datetime) -> KPIMetrics:
         """Calculate key performance indicators"""
         
-        # Filter schedules within date range
-        relevant_schedules = [
-            s for s in schedules 
-            if s.ata and start_date <= s.ata <= end_date
-        ]
+        # Filter schedules within date range - use any available timestamp
+        relevant_schedules = []
+        for s in schedules:
+            schedule_date = s.ata or s.atb or s.eta.registrado or s.etb.estimado
+            if schedule_date and start_date <= schedule_date <= end_date:
+                relevant_schedules.append(s)
         
         if not relevant_schedules:
             return KPIMetrics(
@@ -326,10 +327,15 @@ class KPICalculationService:
             )
         
         # Calculate MAE (Mean Absolute Error) for ETA
+        # Use registered ETA if estimated is not available
         mae_errors = []
         for schedule in relevant_schedules:
-            if schedule.eta.estimado and schedule.ata:
-                error_minutes = abs((schedule.ata - schedule.eta.estimado).total_seconds() / 60)
+            eta_estimated = schedule.eta.estimado or schedule.eta.registrado
+            if eta_estimated and schedule.ata:
+                error_minutes = abs((schedule.ata - eta_estimated).total_seconds() / 60)
+                mae_errors.append(error_minutes)
+            elif eta_estimated and schedule.atb:  # Use ATB if ATA not available
+                error_minutes = abs((schedule.atb - eta_estimated).total_seconds() / 60)
                 mae_errors.append(error_minutes)
         
         mae_eta = sum(mae_errors) / len(mae_errors) if mae_errors else None
@@ -337,11 +343,15 @@ class KPICalculationService:
         # Calculate W/B Ratio (Waiting to Berth Ratio)
         wb_ratios = []
         for schedule in relevant_schedules:
-            if schedule.ata and schedule.atb and schedule.atd:
-                waiting_time = (schedule.atb - schedule.ata).total_seconds() / 60
-                berth_time = (schedule.atd - schedule.atb).total_seconds() / 60
-                if berth_time > 0:
-                    wb_ratio = waiting_time / berth_time
+            arrival_time = schedule.ata or schedule.eta.registrado
+            berth_time = schedule.atb
+            departure_time = schedule.atd
+            
+            if arrival_time and berth_time and departure_time:
+                waiting_time = (berth_time - arrival_time).total_seconds() / 60
+                berthed_time = (departure_time - berth_time).total_seconds() / 60
+                if berthed_time > 0 and waiting_time >= 0:
+                    wb_ratio = waiting_time / berthed_time
                     wb_ratios.append(wb_ratio)
         
         wb_ratio = sum(wb_ratios) / len(wb_ratios) if wb_ratios else None
