@@ -233,7 +233,8 @@ class ExternalAPIService:
             sample_vessels = [
                 {
                     'mmsi': '710006293',
-                    'imo': '9506394', 
+                    'imo': '9506394',
+                    'shipid': '714410', 
                     'vessel_name': 'LOG IN DISCOVERY',
                     'destination': 'BR SSZ',  # Santos port code
                     'eta': (datetime.utcnow() + timedelta(hours=12)).isoformat(),
@@ -246,6 +247,7 @@ class ExternalAPIService:
                 {
                     'mmsi': '710001234',
                     'imo': '9400567',
+                    'shipid': '712345',
                     'vessel_name': 'MSC MEDITERRANEAN',
                     'destination': 'BR SSZ',
                     'eta': (datetime.utcnow() + timedelta(hours=8)).isoformat(),
@@ -258,6 +260,7 @@ class ExternalAPIService:
                 {
                     'mmsi': '710005678',
                     'imo': '9350123',
+                    'shipid': '798765',
                     'vessel_name': 'MAERSK SALVADOR',
                     'destination': 'BR SSZ',
                     'eta': (datetime.utcnow() + timedelta(hours=24)).isoformat(),
