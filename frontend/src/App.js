@@ -48,13 +48,25 @@ const Dashboard = () => {
       if (endDate) kpiParams.append('end_date', endDate);
       
       // Load all dashboard data
-      const [vesselsRes, timelineRes, conflictsRes, kpisRes, marineRes] = await Promise.all([
+      const requests = [
         axios.get(`${API}/vessels`),
         axios.get(`${API}/berths/timeline?${timelineParams.toString()}`),
         axios.get(`${API}/conflicts`),
         axios.get(`${API}/kpis?${kpiParams.toString()}`),
         axios.get(`${API}/marine-traffic/santos`).catch(() => ({ data: { vessels_approaching: [] } }))
-      ]);
+      ];
+
+      // Add current operations if this is "now" view
+      if (startDate === new Date().toISOString().split('T')[0] && 
+          endDate === new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().split('T')[0]) {
+        requests.push(axios.get(`${API}/operations/now`).catch(() => ({ data: { current_operations: {} } })));
+        setIsNowView(true);
+      } else {
+        setIsNowView(false);
+      }
+
+      const responses = await Promise.all(requests);
+      const [vesselsRes, timelineRes, conflictsRes, kpisRes, marineRes, currentOpsRes] = responses;
 
       setVessels(vesselsRes.data);
       
