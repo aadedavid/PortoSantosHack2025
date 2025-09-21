@@ -856,6 +856,33 @@ async def get_current_operations():
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@api_router.get("/aps-diope/tables")
+async def get_aps_diope_tables():
+    """Get APS DIOPE public tables (Esperados/Fundeados/Atracados/Programadas)"""
+    try:
+        diope_data = await external_api.scrape_aps_diope_tables()
+        
+        # Calculate summary statistics
+        summary = {
+            "esperados": len(diope_data["esperados"]),
+            "fundeados": len(diope_data["fundeados"]), 
+            "atracados": len(diope_data["atracados"]),
+            "programadas": len(diope_data["programadas"]),
+            "total": sum(len(vessels) for vessels in diope_data.values())
+        }
+        
+        return {
+            "message": "APS DIOPE tables retrieved successfully",
+            "timestamp": datetime.utcnow().isoformat(),
+            "tables": diope_data,
+            "summary": summary
+        }
+    
+    except Exception as e:
+        logging.error(f"Error getting APS DIOPE tables: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @api_router.get("/marine-traffic/santos")
 async def get_marine_traffic_santos():
     """Get vessels heading to Santos Port from AIS data"""
