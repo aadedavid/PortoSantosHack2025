@@ -609,8 +609,59 @@ async def get_kpis(
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@api_router.get("/sync-historical-data")
+async def sync_historical_data(days_back: int = 7):
+    """Sync extended historical data for better KPI calculations"""
+    try:
+        historical_data = await external_api.fetch_extended_historical_data(days_back)
+        
+        # Store historical data
+        for entry in historical_data:
+            vessel_schedule = VesselSchedule(
+                identificador_navio=entry.get('identificadorNavio'),
+                agencia_maritima=entry.get('nomeAgencia'),
+                status=StatusOperacao.PLANEJADO,
+                created_at=datetime.fromisoformat(entry.get('dataEnvioInformacoes', datetime.utcnow().isoformat()))
+            )
+            
+            await db.vessel_schedules.replace_one(
+                {"identificador_navio": vessel_schedule.identificador_navio},
+                vessel_schedule.dict(),
+                upsert=True
+            )
+        
+        return {
+            "message": "Historical data synchronized successfully",
+            "historical_entries": len(historical_data),
+            "days_back": days_back
+        }
+    
+    except Exception as e:
+        logging.error(f"Error syncing historical data: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@api_router.get("/marine-traffic/santos")
+async def get_marine_traffic_santos():
+    """Get vessels heading to Santos Port from AIS data"""
+    try:
+        vessels = await external_api.scrape_marinetraffic_santos()
+        return {
+            "message": "AIS data retrieved successfully",
+            "vessels_approaching": vessels,
+            "count": len(vessels)
+        }
+    
+    except Exception as e:
+        logging.error(f"Error getting marine traffic data: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @api_router.get("/berths/timeline")
-async def get_berth_timeline():
+async def get_berth_timeline(
+    start_date: Optional[str] = None,
+    end_date: Optional[str] = None
+):
     """Get timeline view of all berths for Gantt chart"""
     try:
         vessels = await db.vessel_schedules.find().to_list(1000)
