@@ -720,7 +720,14 @@ async def get_berth_timeline(
                 key=lambda x: x["etb"] if x["etb"] else "9999-12-31T23:59:59"
             )
         
-        return berth_timeline
+        return {
+            "berth_timeline": berth_timeline,
+            "date_filter": {
+                "start_date": start_date,
+                "end_date": end_date
+            },
+            "total_vessels": sum(len(schedules) for schedules in berth_timeline.values())
+        }
     
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
