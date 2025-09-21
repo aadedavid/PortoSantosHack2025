@@ -641,6 +641,99 @@ async def sync_historical_data(days_back: int = 7):
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@api_router.get("/operations/now")
+async def get_current_operations():
+    """Get current port operations - recent arrivals, current operations, next 24h"""
+    try:
+        now = datetime.utcnow()
+        yesterday = now - timedelta(hours=24)
+        tomorrow = now + timedelta(hours=24)
+        
+        # Get vessels in current operational window
+        vessels = await db.vessel_schedules.find().to_list(1000)
+        
+        current_ops = {
+            "recently_arrived": [],  # Arrived in last 24h
+            "currently_berthed": [], # Currently at berth
+            "arriving_soon": [],     # Expected in next 24h
+            "departing_soon": []     # Expected to depart in next 24h
+        }
+        
+        for vessel_data in vessels:
+            vessel = VesselSchedule(**vessel_data)
+            
+            # Recently arrived (ATA in last 24h)
+            if vessel.ata and yesterday <= vessel.ata <= now:
+                current_ops["recently_arrived"].append({
+                    "vessel": vessel.identificador_navio,
+                    "terminal": vessel.terminal,
+                    "arrival_time": vessel.ata.isoformat(),
+                    "hours_ago": int((now - vessel.ata).total_seconds() / 3600),
+                    "status": vessel.status,
+                    "agency": vessel.agencia_maritima
+                })
+            
+            # Currently berthed (ATB exists, no ATD yet)
+            if vessel.atb and not vessel.atd:
+                berth_duration = int((now - vessel.atb).total_seconds() / 3600) if vessel.atb else 0
+                current_ops["currently_berthed"].append({
+                    "vessel": vessel.identificador_navio,
+                    "terminal": vessel.terminal,
+                    "berthed_since": vessel.atb.isoformat() if vessel.atb else None,
+                    "hours_berthed": berth_duration,
+                    "status": vessel.status,
+                    "operation": vessel.tipo_operacao,
+                    "agency": vessel.agencia_maritima
+                })
+            
+            # Arriving soon (ETB in next 24h)
+            etb_time = vessel.etb.estimado or vessel.etb.registrado
+            if etb_time and now <= etb_time <= tomorrow:
+                hours_until = int((etb_time - now).total_seconds() / 3600)
+                current_ops["arriving_soon"].append({
+                    "vessel": vessel.identificador_navio,
+                    "terminal": vessel.terminal,
+                    "expected_berth": etb_time.isoformat(),
+                    "hours_until": hours_until,
+                    "priority": vessel.prioridade_rap,
+                    "agency": vessel.agencia_maritima
+                })
+            
+            # Departing soon (ETD in next 24h)
+            etd_time = vessel.etd.estimado or vessel.etd.registrado
+            if etd_time and now <= etd_time <= tomorrow:
+                hours_until = int((etd_time - now).total_seconds() / 3600)
+                current_ops["departing_soon"].append({
+                    "vessel": vessel.identificador_navio,
+                    "terminal": vessel.terminal,
+                    "expected_departure": etd_time.isoformat(),
+                    "hours_until": hours_until,
+                    "operation": vessel.tipo_operacao,
+                    "agency": vessel.agencia_maritima
+                })
+        
+        # Sort by time
+        current_ops["recently_arrived"].sort(key=lambda x: x["hours_ago"])
+        current_ops["currently_berthed"].sort(key=lambda x: x["hours_berthed"], reverse=True)
+        current_ops["arriving_soon"].sort(key=lambda x: x["hours_until"])
+        current_ops["departing_soon"].sort(key=lambda x: x["hours_until"])
+        
+        return {
+            "timestamp": now.isoformat(),
+            "current_operations": current_ops,
+            "summary": {
+                "recently_arrived": len(current_ops["recently_arrived"]),
+                "currently_berthed": len(current_ops["currently_berthed"]),
+                "arriving_soon": len(current_ops["arriving_soon"]),
+                "departing_soon": len(current_ops["departing_soon"])
+            }
+        }
+    
+    except Exception as e:
+        logging.error(f"Error getting current operations: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @api_router.get("/marine-traffic/santos")
 async def get_marine_traffic_santos():
     """Get vessels heading to Santos Port from AIS data"""
