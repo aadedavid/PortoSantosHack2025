@@ -105,6 +105,88 @@ class PortSystemAPITester:
         endpoint = f"kpis?start_date={start_date}&end_date={end_date}"
         return self.run_test("Get KPIs with Date Range", "GET", endpoint, 200)
 
+    def test_sync_historical_data(self):
+        """Test sync historical data endpoint - NEW FEATURE"""
+        return self.run_test("Sync Historical Data (7 days)", "GET", "sync-historical-data?days_back=7", 200, timeout=45)
+
+    def test_marine_traffic_santos(self):
+        """Test MarineTraffic AIS integration - NEW FEATURE"""
+        return self.run_test("Get Marine Traffic Santos (AIS)", "GET", "marine-traffic/santos", 200, timeout=30)
+
+    def test_berth_timeline_with_filters(self):
+        """Test berth timeline with date filters - NEW FEATURE"""
+        start_date = "2024-01-01T00:00:00"
+        end_date = "2024-12-31T23:59:59"
+        endpoint = f"berths/timeline?start_date={start_date}&end_date={end_date}"
+        return self.run_test("Get Berth Timeline with Date Filters", "GET", endpoint, 200)
+
+    def validate_kpi_calculations(self):
+        """Validate that KPIs are now calculated (not N/A) - NEW FEATURE VALIDATION"""
+        print("\n🧮 Validating KPI Calculations...")
+        success, kpi_data = self.run_test("Get KPIs for Validation", "GET", "kpis", 200)
+        
+        if success and isinstance(kpi_data, dict):
+            mae_eta = kpi_data.get('mae_eta')
+            rcj_reliability = kpi_data.get('rcj_reliability')
+            wb_ratio = kpi_data.get('wb_ratio')
+            total_escalas = kpi_data.get('total_escalas', 0)
+            
+            print(f"   📊 KPI Values:")
+            print(f"   - MAE(ETA): {mae_eta} min (should be ~2046 min, not None)")
+            print(f"   - RCJ: {rcj_reliability}% (should be ~86%, target ≥85%)")
+            print(f"   - W/B Ratio: {wb_ratio}")
+            print(f"   - Total Escalas: {total_escalas}")
+            
+            # Validate calculations are working
+            if mae_eta is not None:
+                print("   ✅ MAE(ETA) is calculated (not N/A)")
+            else:
+                print("   ❌ MAE(ETA) is still N/A - calculation may not be working")
+                
+            if rcj_reliability is not None:
+                if rcj_reliability >= 85:
+                    print("   ✅ RCJ meets target (≥85%)")
+                else:
+                    print(f"   ⚠️  RCJ below target: {rcj_reliability}% < 85%")
+            else:
+                print("   ❌ RCJ is still N/A - calculation may not be working")
+                
+            return mae_eta is not None or rcj_reliability is not None
+        
+        return False
+
+    def validate_marine_traffic_data(self):
+        """Validate MarineTraffic AIS data structure - NEW FEATURE VALIDATION"""
+        print("\n🚢 Validating Marine Traffic AIS Data...")
+        success, marine_data = self.run_test("Get Marine Traffic for Validation", "GET", "marine-traffic/santos", 200)
+        
+        if success and isinstance(marine_data, dict):
+            vessels = marine_data.get('vessels_approaching', [])
+            count = marine_data.get('count', 0)
+            
+            print(f"   📡 AIS Data:")
+            print(f"   - Vessels approaching: {count}")
+            
+            expected_vessels = ['LOG IN DISCOVERY', 'MSC MEDITERRANEAN', 'MAERSK SALVADOR']
+            found_vessels = []
+            
+            for vessel in vessels:
+                vessel_name = vessel.get('vessel_name', '')
+                found_vessels.append(vessel_name)
+                print(f"   - {vessel_name}: ETA {vessel.get('eta', 'N/A')}, Distance {vessel.get('distance_to_port', 'N/A')} km")
+            
+            # Check if expected vessels are present
+            all_found = all(expected in found_vessels for expected in expected_vessels)
+            if all_found:
+                print("   ✅ All expected vessels found in AIS data")
+            else:
+                missing = [v for v in expected_vessels if v not in found_vessels]
+                print(f"   ⚠️  Missing expected vessels: {missing}")
+            
+            return len(vessels) > 0
+        
+        return False
+
 def main():
     print("🚢 Hub de Atracação - Porto de Santos API Testing")
     print("=" * 60)
