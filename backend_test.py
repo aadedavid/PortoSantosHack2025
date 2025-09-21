@@ -207,6 +207,12 @@ def main():
     tester.test_get_kpis()
     tester.test_kpis_with_date_range()
     
+    # NEW FEATURES TESTING
+    print("\n🆕 Testing NEW Features...")
+    tester.test_marine_traffic_santos()
+    tester.test_sync_historical_data()
+    tester.test_berth_timeline_with_filters()
+    
     # Test specific vessel endpoint
     tester.test_get_specific_vessel()
     
@@ -219,6 +225,11 @@ def main():
     tester.test_get_berth_timeline()
     tester.test_get_conflicts()
     tester.test_get_kpis()
+    
+    # NEW FEATURES VALIDATION
+    print("\n🔍 Validating NEW Features Implementation...")
+    tester.validate_kpi_calculations()
+    tester.validate_marine_traffic_data()
 
     # Print results
     print(f"\n📊 Test Results Summary:")
