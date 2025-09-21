@@ -124,6 +124,40 @@ const Dashboard = () => {
     loadDashboardData(startDate, endDate);
   };
 
+  const openMarineTrafficLink = async (vesselId) => {
+    try {
+      const response = await axios.get(`${API}/marine-traffic/links/${vesselId}`);
+      const links = response.data.marine_traffic_links;
+      
+      // Prefer details page, fallback to map
+      const url = links.details || links.map_vessel || links.map_coords;
+      
+      if (url) {
+        window.open(url, '_blank', 'noopener,noreferrer');
+      } else {
+        alert('Dados de rastreamento AIS não disponíveis para este navio');
+      }
+    } catch (error) {
+      console.error('Erro ao abrir link MarineTraffic:', error);
+      alert('Erro ao acessar dados de rastreamento');
+    }
+  };
+
+  const openPortMapLink = async () => {
+    try {
+      const response = await axios.get(`${API}/marine-traffic/port-santos`);
+      const portUrl = response.data.marine_traffic_links.port_map;
+      
+      if (portUrl) {
+        window.open(portUrl, '_blank', 'noopener,noreferrer');
+      }
+    } catch (error) {
+      console.error('Erro ao abrir mapa do porto:', error);
+      // Fallback to direct Santos port URL
+      window.open('https://www.marinetraffic.com/pt/ais/home/centerx:-46.3334/centery:-23.9534/zoom:11', '_blank');
+    }
+  };
+
   const getStatusColor = (status) => {
     const colors = {
       'concluido': 'bg-green-500',
