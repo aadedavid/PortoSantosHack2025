@@ -662,9 +662,31 @@ async def get_berth_timeline(
     start_date: Optional[str] = None,
     end_date: Optional[str] = None
 ):
-    """Get timeline view of all berths for Gantt chart"""
+    """Get timeline view of all berths for Gantt chart with date filtering"""
     try:
-        vessels = await db.vessel_schedules.find().to_list(1000)
+        # Build date filter
+        date_filter = {}
+        if start_date or end_date:
+            date_conditions = []
+            if start_date:
+                start_dt = datetime.fromisoformat(start_date)
+                date_conditions.append({"$or": [
+                    {"etb.estimado": {"$gte": start_dt.isoformat()}},
+                    {"atb": {"$gte": start_dt.isoformat()}},
+                    {"created_at": {"$gte": start_dt}}
+                ]})
+            if end_date:
+                end_dt = datetime.fromisoformat(end_date)
+                date_conditions.append({"$or": [
+                    {"etb.estimado": {"$lte": end_dt.isoformat()}},
+                    {"atb": {"$lte": end_dt.isoformat()}},
+                    {"created_at": {"$lte": end_dt}}
+                ]})
+            
+            if date_conditions:
+                date_filter = {"$and": date_conditions}
+        
+        vessels = await db.vessel_schedules.find(date_filter).to_list(1000)
         
         # Group by terminal/berth
         berth_timeline = {}
